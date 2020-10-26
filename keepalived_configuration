@@ -1,0 +1,78 @@
+
+UPDATE THE SYSTEM
+
+sudo apt update
+
+INSTALLING KEEPALIVED. INSTALL KEEPALIVED ON ALL THE VM'S
+
+sudo apt install keepalived
+
+
+KEEPALIVED SETUP FOR MASTER 
+
+The configuration file of keepalived is loacted at /etc/keepalived/keepalived.conf
+
+Open keepalived.conf with nano editor 
+
+sudo nano /etc/keepalived/keepalived.conf
+
+Add the below mentioned configuration on etc/keepalived/keepalived.conf to setup a IP failover.
+
+vrrp_instance VI_1 {
+    state MASTER
+    interface enp7s0    # Interface is mentioned here.
+    virtual_router_id 51    # Virtual router id should be same on both master and backup server.
+    priority 101        # Highest priority value takes the MASTER role.
+    advert_int 1        # Time, in seconds, between VRRP advertisements. Should be same on master and backup.
+    authentication {
+        auth_type PASS  # Authentication type. Password authentication is used now.
+        auth_pass 1234  # Password is mentioned here.
+    }
+    unicast_src_ip IP Address   # The source IP is mentioned here. IP of the current VM.
+
+    unicast_peer {
+	IP Address          # The peer ip is mentioned here.
+    }
+
+    notify_master "/etc/keepalived/failover.sh" # Script that should execute when the VM comes to master state. Api call for assigning the floating ip
+    notify_backup "/etc/keepalived/backup.sh"   # Script that should execute when the VM comes to backup state (optional).
+}
+
+
+KEEPALIVED SETUP FOR BACKUP
+
+vrrp_instance VI_1 {
+    state BACKUP
+    interface enp7s0    # Interface is mentioned here.
+    virtual_router_id 51    # Virtual router id should be same on both master and backup server.
+    priority 100        # Highest priority value takes the MASTER role.
+    advert_int 1        # Time, in seconds, between VRRP advertisements.Should be same on master and backup.
+    authentication {
+        auth_type PASS  # Authentication type. Password authentication is used now.
+        auth_pass 1234  # Password is mentioned here.
+    }
+    unicast_src_ip IP Address   # The source IP is mentioned here. IP of the current VM.
+
+    unicast_peer {
+	IP Address          # The peer ip is mentioned here.
+    }
+
+    notify_master "/etc/keepalived/failover.sh" # Script that should execute when the VM comes to master state. Api call for assigning the floating ip
+    notify_backup "/etc/keepalived/backup.sh"   # Script that should execute when the VM comes to backup state (optional).
+}
+
+
+
+START THE KEEPALIVED
+
+sudo service keepalived start
+
+Logs can be found at /var/log/syslog. Executing "sudo service keepalived start & sudo tail -f /var/log/syslog" starts keepalived and displays log on screen.
+
+
+IMPORTANT NOTE
+
+The indentation should be used 4 spaces on the keepalived configuration file.
+
+
+
