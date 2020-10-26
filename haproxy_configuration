@@ -1,0 +1,104 @@
+INSTALLING THE HAPROXY IN UBUNTU
+
+The Haproxy is available in the ubuntu repository. It can be installed by executing "sudo apt install haproxy".
+If the Haproxy is not available in the ubuntu repository, we can add the haproxy repo in the sources and the Haproxy can be installed after that.
+
+UPDATE THE SYSTEM
+
+sudo apt-get update 
+sudo apt-get upgrade -y
+
+ADD HAPROXY REPOSITORY (Skip this step if Haproxy is installed directly from the ubuntu repository)
+
+sudo apt-get install software-properties-common curl -y
+sudo curl https://haproxy.debian.net/bernat.debian.org.gpg | apt-key add -
+sudo echo "deb http://haproxy.debian.net $(lsb_release -cs)-backports-2.0 main" | tee /etc/apt/sources.list.d/haproxy.list
+sudo add-apt-repository ppa:vbernat/haproxy-2.0
+
+INSTALL HAPROXY
+
+sudo apt update
+sudo apt install haproxy
+
+CONFIGURE HAPROXY
+
+The configuration file for HAproxy is located in path /etc/haproxy/haproxy.cfg. We can open the configuration file with vim or nano "sudo nano /etc/haproxy/haproxy.cfg"
+
+The initial configuration file will look like this
+
+global
+	log /dev/log	local0
+	log /dev/log	local1 notice
+	chroot /var/lib/haproxy
+	stats socket /run/haproxy/admin.sock mode 660 level admin expose-fd listeners
+	stats timeout 30s
+	user haproxy
+	group haproxy
+	daemon
+
+	# Default SSL material locations
+	ca-base /etc/ssl/certs
+	crt-base /etc/ssl/private
+
+	# Default ciphers to use on SSL-enabled listening sockets.
+	# For more information, see ciphers(1SSL). This list is from:
+	#  https://hynek.me/articles/hardening-your-web-servers-ssl-ciphers/
+	# An alternative list with additional directives can be obtained from
+	#  https://mozilla.github.io/serverhe -side-tls/ssl-config-generator/?server=haproxy
+	ssl-default-bind-ciphers ECDH+AESGCM:DH+AESGCM:ECDH+AES256:DH+AES256:ECDH+AES128:DH+AES:RSA+AESGCM:RSA+AES:!aNULL:!MD5:!DSS
+	ssl-default-bind-options no-sslv3
+
+defaults
+	log	global
+	mode	http
+	option	httplog
+	option	dontlognull
+    timeout connect 5000
+    timeout client  50000
+    timeout server  50000
+	errorfile 400 /etc/haproxy/errors/400.http
+	errorfile 403 /etc/haproxy/errors/403.http
+	errorfile 408 /etc/haproxy/errors/408.http
+	errorfile 500 /etc/haproxy/errors/500.http
+	errorfile 502 /etc/haproxy/errors/502.http
+	errorfile 503 /etc/haproxy/errors/503.http
+	errorfile 504 /etc/haproxy/errors/504.http
+
+
+ADDING HAPROXY LOAD BALANCER FOR HTTP TRAFFIC
+
+The HAproxy is mainly used to load balance the traffic and also acts as a reverse proxy. The traffic can redirected to different servers as we configure.
+For configuring the load balancer, the frontend and backend has to be configured. Here the incoming traffic to ip 192.168.1.12 on port 80 will be redirected to 192.168.1.101:80 and 192.168.1.102:80. The frontend and backend configurations has to added after the defaults section in the HAproxy configuration file. The configuration will look like this :-
+
+
+frontend Local_Server    # The frontend configuration is mentioned here 
+   bind 192.168.1.12:80  # This is the ip or interface:port for the incoming traffic. Should be mentioned as IP/INTERFACE:PORT
+   mode http             # Mode is defined here. example http, tcp etc..
+   default_backend My_Web_Servers # The name of the backend has to mentioned here. Here My_Web_Servers is the name of the backend.
+
+
+backend My_Web_Servers    # The backend configuration is mentioned here        
+    mode http             # Mode is defined here. example http, tcp etc..
+    balance roundrobin    # The nature of load balance is mentioned here. example roundrobin, leastconn, static-rr etc...
+    option forwardfor     # The option for forwarding
+    http-request set-header X-Forwarded-Port %[dst_port]
+    http-request add-header X-Forwarded-Proto https if { ssl_fc }
+    option httpchk HEAD / HTTP/1.1rnHost:localhost
+    server web1.example.com  192.168.1.101:80   # The domain of the server and the destination IP:PORT has to be mentioned here
+    server web2.example.com  192.168.1.102:80   # The domain of the server and the destination IP:PORT has to be mentioned here
+
+ADDING HAPROXY FOR REDIRECTING TCP TRAFFIC
+
+frontend fiop2p
+    option tcplog
+    bind 10.0.0.4:9976    # The listening IP:PORT has to be mentioned here
+    mode tcp              # The mode is mentioned here. The mode is important and should not be avoided.
+    timeout client 4h
+    #option clitcpka
+    use_backend p2p-fio   # The name of the backend is mentioned here
+
+backend p2p-fio
+    mode tcp              # The mode is mentioned here
+    server telos-p2p-1 95.217.222.178:9876    # The name of the backend server and the destination IP:PORT has to be mentioned here. 
+
+
