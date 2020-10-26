@@ -9,7 +9,7 @@ sudo nano /etc/network/interfaces.d/60-my-floating-ip.cfg
 
 auto eth0:1    # name of the subinterface
  iface eth0:1 inet static
-     address 94.130.190.56    # IP address   
+     address IP    # IP address. The floating ip can be added here   
      netmask 32    # netmask
 
 
@@ -51,7 +51,7 @@ network:
         veth0:        # Name of subinterface
             id: 0
             link: eth0    # Main interface
-            addresses: [IP/NETMASK]   # IP for subinterface/subnet mask
+            addresses: [IP/NETMASK]   # IP for subinterface/subnet mask. The floating ip can be added here.
 
 
  
@@ -76,7 +76,7 @@ network:
             addresses: [IP/NETMASK]
 
 
-# After adding the vlans save the config file and apply the changes 
+# After adding the vlans save the config file and apply the changes. This will create a subinterface veth0 
 
 
 sudo netplan apply
