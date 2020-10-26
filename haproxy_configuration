@@ -100,5 +100,10 @@ frontend fiop2p
 backend p2p-fio
     mode tcp              # The mode is mentioned here
     server telos-p2p-1 IP:PORT    # The name of the backend server and the destination IP:PORT has to be mentioned here. 
+    
+RESTART HAPROXY
+
+sudo haproxy -c -f /etc/haproxy/haproxy.cfg
+sudo systemctl restart haproxy  
 
 
