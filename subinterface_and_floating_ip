@@ -1,0 +1,86 @@
+ADDING SUBINTERFACE IN UBUTU 18.04
+
+
+# Create a config file in /etc/network/interfaces.d with name 60-my-floating-ip.cfg
+
+sudo nano /etc/network/interfaces.d/60-my-floating-ip.cfg
+
+# Enter the following configuration to create a subinterface eth0:1
+
+auto eth0:1    # name of the subinterface
+ iface eth0:1 inet static
+     address 94.130.190.56    # IP address   
+     netmask 32    # netmask
+
+
+# Save the config file and restart the network 
+
+sudo service networking restart
+
+# use ifconfig to confirm the subinterface is added
+
+
+
+ADDING SUBINTERFACE IN UBUTU 20.04
+
+# Ubuntu 18.04 uses files in /etc/network/interfaces.d as the configuration file for network.
+# Ubuntu 20.04 uses netplan for controlling and modifying the networks.
+# The default configuration file for netplan is located at /etc/netplan
+# The default configuration file will look like this :-
+
+# This file is generated from information provided by the datasource.  Changes
+# to it will not persist across an instance reboot.  To disable cloud-init's
+# network configuration capabilities, write a file
+# /etc/cloud/cloud.cfg.d/99-disable-network-config.cfg with the following:
+# network: {config: disabled}
+network:
+    version: 2
+    ethernets:
+        eth0:
+            addresses:
+            - IPV6/64
+            dhcp4: true
+            gateway6: IPV6
+            match:
+                macaddress: MAC-ID
+            set-name: eth0
+
+# For adding the subinterface with netplan, we have to create the vlans and add it in /etc/netplan/50-cloud-init.yaml. The configuration will look like this
+
+    vlans:            # Creating the vlan
+        veth0:        # Name of subinterface
+            id: 0
+            link: eth0    # Main interface
+            addresses: [IP/NETMASK]   # IP for subinterface/subnet mask
+
+
+ 
+THE FINAL CONFIGURATION FILE SHOULD LOOK LIKE THIS IN /etc/netplan/50-cloud-init.yaml :-
+
+network:
+    version: 2
+    ethernets:
+        eth0:
+            addresses:
+            - IPV6/64
+            dhcp4: true
+            gateway6: IPV6
+            match:
+                macaddress: MAC-ID
+            set-name: eth0
+
+    vlans:
+        veth0:
+            id: 0
+            link: eth0
+            addresses: [IP/NETMASK]
+
+
+# After adding the vlans save the config file and apply the changes 
+
+
+sudo netplan apply
+
+
+# use ifconfig to confirm the subinterface is added
+
