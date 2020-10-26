@@ -91,7 +91,7 @@ ADDING HAPROXY FOR REDIRECTING TCP TRAFFIC
 
 frontend fiop2p
     option tcplog
-    bind 10.0.0.4:9976    # The listening IP:PORT has to be mentioned here
+    bind IP:PORT          # The listening IP:PORT has to be mentioned here
     mode tcp              # The mode is mentioned here. The mode is important and should not be avoided.
     timeout client 4h
     #option clitcpka
@@ -99,6 +99,6 @@ frontend fiop2p
 
 backend p2p-fio
     mode tcp              # The mode is mentioned here
-    server telos-p2p-1 95.217.222.178:9876    # The name of the backend server and the destination IP:PORT has to be mentioned here. 
+    server telos-p2p-1 IP:PORT    # The name of the backend server and the destination IP:PORT has to be mentioned here. 
 
 
