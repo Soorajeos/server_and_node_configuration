@@ -106,4 +106,6 @@ RESTART HAPROXY
 sudo haproxy -c -f /etc/haproxy/haproxy.cfg
 sudo systemctl restart haproxy  
 
+ENABLE HAPROXY
 
+sudo systemctl enable haproxy
